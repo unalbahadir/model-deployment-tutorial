@@ -10,8 +10,14 @@ phases:
       - |
         if [ "$DEPLOY_TO_K8S" = "true" ]; then
           echo Updating kubeconfig to access EKS cluster...
+          if [ -z "$AWS_DEFAULT_REGION" ] || [ -z "$EKS_CLUSTER_NAME" ]; then
+            echo "ERROR: AWS_DEFAULT_REGION and EKS_CLUSTER_NAME must be set when DEPLOY_TO_K8S=true"
+            exit 1
+          fi
           aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $EKS_CLUSTER_NAME
+          echo Verifying kubectl connection...
           kubectl version --client
+          kubectl cluster-info || echo "Warning: Could not get cluster info, but continuing..."
         fi
       - REPOSITORY_URI=$ECR_REPO_REGISTRY/$APP_NAME
       - IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
@@ -29,6 +35,22 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - |
         if [ "$DEPLOY_TO_K8S" = "true" ]; then
+          echo Updating kubeconfig to access EKS cluster (re-connecting)...
+          if [ -z "$AWS_DEFAULT_REGION" ] || [ -z "$EKS_CLUSTER_NAME" ]; then
+            echo "ERROR: AWS_DEFAULT_REGION and EKS_CLUSTER_NAME must be set when DEPLOY_TO_K8S=true"
+            exit 1
+          fi
+          aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $EKS_CLUSTER_NAME
+          echo Verifying kubectl connection to cluster...
+          if ! kubectl get nodes &>/dev/null; then
+            echo "ERROR: Failed to connect to EKS cluster. Check:"
+            echo "  1. EKS_CLUSTER_NAME is correct: $EKS_CLUSTER_NAME"
+            echo "  2. AWS_DEFAULT_REGION is correct: $AWS_DEFAULT_REGION"
+            echo "  3. CodeBuild role has eks:DescribeCluster permission"
+            echo "  4. CodeBuild role is in the EKS cluster's aws-auth ConfigMap"
+            exit 1
+          fi
+          echo Successfully connected to EKS cluster
           echo Updating the Kubernetes manifest with the new image tag...
           # Replace the ECR registry placeholder in deployment.yaml (if it exists)
           sed -i "s|<YOUR_ECR_REGISTRY>|$ECR_REPO_REGISTRY|g" k8s/deployment.yaml
@@ -63,4 +85,3 @@ phases:
 artifacts:
   files:
     - imagedefinitions.json
-
