@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  labels:
+    app: model-deployment-api
+data:
+  AWS_REGION: "eu-central-1"
+  CLOUDWATCH_LOG_GROUP: "model-deployment-tutorial"
+  CLOUDWATCH_LOG_STREAM: "api"
+  MODEL_PATH: "model.txt"
+  ENVIRONMENT: "prod"
+  DEBUG: "false"
+  ENABLE_METRICS: "true"
+  PORT: "8000"
+

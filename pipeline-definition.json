@@ -1,0 +1,65 @@
+{
+  "pipeline": {
+    "name": "model-deployment-tutorial-pipeline",
+    "roleArn": "arn:aws:iam::448772857649:role/CodePipeline-ModelDeployment-Role",
+    "artifactStore": {
+      "type": "S3",
+      "location": "codepipeline-eu-central-1-448772857649"
+    },
+    "stages": [
+      {
+        "name": "Source",
+        "actions": [
+          {
+            "name": "SourceAction",
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "AWS",
+              "provider": "CodeStarSourceConnection",
+              "version": "1"
+            },
+            "outputArtifacts": [
+              {
+                "name": "SourceOutput"
+              }
+            ],
+            "configuration": {
+              "ConnectionArn": "arn:aws:codestar-connections:eu-central-1:448772857649:connection/YOUR_CONNECTION_ID",
+              "FullRepositoryId": "YOUR_USERNAME/YOUR_REPO_NAME",
+              "BranchName": "main"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Build",
+        "actions": [
+          {
+            "name": "BuildAction",
+            "actionTypeId": {
+              "category": "Build",
+              "owner": "AWS",
+              "provider": "CodeBuild",
+              "version": "1"
+            },
+            "inputArtifacts": [
+              {
+                "name": "SourceOutput"
+              }
+            ],
+            "outputArtifacts": [
+              {
+                "name": "BuildOutput"
+              }
+            ],
+            "configuration": {
+              "ProjectName": "model-deployment-tutorial-build"
+            }
+          }
+        ]
+      }
+    ],
+    "version": 1
+  }
+}
+

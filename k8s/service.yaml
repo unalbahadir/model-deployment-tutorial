@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-deployment-api-service
+  labels:
+    app: model-deployment-api
+spec:
+  type: ClusterIP  # Use NodePort if not using Ingress, or LoadBalancer for direct access
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: model-deployment-api
+  sessionAffinity: None
+

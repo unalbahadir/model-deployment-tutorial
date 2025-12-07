@@ -1,0 +1,47 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - docker --version
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO_REGISTRY
+      - echo Successfully authenticated to ECR
+      - |
+        if [ "$DEPLOY_TO_K8S" = "true" ]; then
+          echo Updating kubeconfig to access EKS cluster...
+          aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $EKS_CLUSTER_NAME
+          kubectl version --client
+        fi
+      - REPOSITORY_URI=$ECR_REPO_REGISTRY/$APP_NAME
+      - IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build --platform=linux/amd64 -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - |
+        if [ "$DEPLOY_TO_K8S" = "true" ]; then
+          echo Updating the Kubernetes manifest with the new image tag...
+          sed -i "s|$REPOSITORY_URI:.*|$REPOSITORY_URI:$IMAGE_TAG|g" k8s/deployment.yaml
+          echo Applying Kubernetes manifests...
+          kubectl apply -f k8s/deployment.yaml
+          echo Waiting for Kubernetes rollout to complete...
+          kubectl rollout status deployment/model-deployment-api --timeout=5m
+          echo Kubernetes deploy and rollout completed.
+        else
+          echo Skipping Kubernetes deployment (set DEPLOY_TO_K8S=true to enable)
+        fi
+      - echo Writing image definitions file...
+      - printf '[{"name":"model-deployment-api","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+  files:
+    - imagedefinitions.json
+

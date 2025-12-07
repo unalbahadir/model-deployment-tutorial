@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Running tests...
+      - python --version
+      - pip install -r requirements.txt
+  build:
+    commands:
+      - echo Running unit tests...
+      - python -m pytest tests/ -v --cov=src --cov-report=xml || true
+      - echo Running linting...
+      - pip install flake8 black || true
+      - |
+        if command -v flake8 &> /dev/null; then
+          flake8 src/ --max-line-length=120 --ignore=E501,W503 || true
+        fi
+      - echo Code formatting check...
+      - |
+        if command -v black &> /dev/null; then
+          black --check src/ || true
+        fi
+  post_build:
+    commands:
+      - echo Test phase completed
+

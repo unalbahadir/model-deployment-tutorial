@@ -1,0 +1,60 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["ModelDeployment", "RequestCount"],
+          [".", "ErrorCount"],
+          [".", "InferenceTime"],
+          [".", "RequestTime"]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "eu-central-1",
+        "title": "Model API Metrics"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["ModelDeployment", "InferenceTime", { "stat": "Average" }],
+          [".", "RequestTime", { "stat": "Average" }]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "eu-central-1",
+        "title": "Average Response Times"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["ModelDeployment", "RequestCount", { "stat": "Sum" }],
+          [".", "ErrorCount", { "stat": "Sum" }]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "eu-central-1",
+        "title": "Request and Error Counts"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["ModelDeployment", "InferenceTime", { "stat": "Maximum" }],
+          [".", "InferenceTime", { "stat": "Minimum" }],
+          [".", "InferenceTime", { "stat": "Average" }]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "eu-central-1",
+        "title": "Inference Time Statistics"
+      }
+    }
+  ]
+}
+
