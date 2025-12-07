@@ -30,12 +30,31 @@ phases:
       - |
         if [ "$DEPLOY_TO_K8S" = "true" ]; then
           echo Updating the Kubernetes manifest with the new image tag...
-          sed -i "s|$REPOSITORY_URI:.*|$REPOSITORY_URI:$IMAGE_TAG|g" k8s/deployment.yaml
+          # Replace the ECR registry placeholder in deployment.yaml (if it exists)
+          sed -i "s|<YOUR_ECR_REGISTRY>|$ECR_REPO_REGISTRY|g" k8s/deployment.yaml
+          # Update the image tag to use the build number
+          # This handles both cases: placeholder replaced or full URL already present
+          sed -i "s|$ECR_REPO_REGISTRY/$APP_NAME:.*|$REPOSITORY_URI:$IMAGE_TAG|g" k8s/deployment.yaml
           echo Applying Kubernetes manifests...
+          # Apply ConfigMap (if it doesn't exist, this will create it)
+          kubectl apply -f k8s/configmap.yaml || echo "ConfigMap may already exist or failed to apply"
+          # Apply Secrets (if it doesn't exist, this will create it)
+          kubectl apply -f k8s/secrets.yaml || echo "Secrets may already exist or failed to apply"
+          # Apply Deployment
           kubectl apply -f k8s/deployment.yaml
+          # Apply Service
+          kubectl apply -f k8s/service.yaml
+          # Apply HPA (Horizontal Pod Autoscaler)
+          kubectl apply -f k8s/hpa.yaml || echo "HPA may already exist or failed to apply"
+          # Apply Ingress (for ALB)
+          kubectl apply -f k8s/ingress.yaml || echo "Ingress may already exist or failed to apply"
           echo Waiting for Kubernetes rollout to complete...
           kubectl rollout status deployment/model-deployment-api --timeout=5m
           echo Kubernetes deploy and rollout completed.
+          echo Verifying deployment...
+          kubectl get pods -l app=model-deployment-api
+          kubectl get svc model-deployment-api-service
+          kubectl get ingress model-deployment-api-ingress || echo "Ingress not yet ready"
         else
           echo Skipping Kubernetes deployment (set DEPLOY_TO_K8S=true to enable)
         fi

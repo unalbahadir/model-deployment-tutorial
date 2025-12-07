@@ -14,9 +14,13 @@ spec:
       labels:
         app: model-deployment-api
     spec:
+      # Uncomment the line below if using IRSA (IAM Roles for Service Accounts)
+      # serviceAccountName: model-deployment-sa
       containers:
       - name: api
-        image: <YOUR_ECR_REGISTRY>/model-deployment-tutorial:latest
+        # ECR registry URL (buildspec.yaml will override this during CI/CD with the build number tag)
+        # For manual deployments, this image will be used
+        image: 448772857649.dkr.ecr.eu-central-1.amazonaws.com/model-deployment-tutorial:latest
         ports:
         - containerPort: 8000
         envFrom:

@@ -134,6 +134,8 @@ docker run -p 8000:8000 \
 
 ### Kubernetes
 
+#### Local/Minikube Deployment
+
 1. **Update image in deployment.yaml**:
 ```yaml
 image: <YOUR_ECR_REGISTRY>/model-deployment-tutorial:latest
@@ -162,7 +164,7 @@ kubectl apply -f k8s/hpa.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
-3. **Check status**:
+4. **Check status**:
 ```bash
 kubectl get pods
 kubectl get services
@@ -176,6 +178,26 @@ make k8s-deploy          # Deploy application
 make k8s-apply-hpa       # Apply HPA
 make k8s-apply-ingress   # Apply Ingress
 ```
+
+#### Amazon EKS Deployment
+
+**📘 For complete EKS deployment guide, see [EKS_DEPLOYMENT_GUIDE.md](./EKS_DEPLOYMENT_GUIDE.md)**
+
+Quick start:
+
+1. **Create EKS cluster**:
+```bash
+./scripts/setup_eks_cluster.sh --cluster-name model-deployment-cluster
+```
+
+2. **Deploy application**:
+```bash
+./scripts/deploy_to_eks.sh --cluster-name model-deployment-cluster
+```
+
+3. **Or use CI/CD** (see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)):
+   - Configure CodeBuild with `DEPLOY_TO_K8S=true`
+   - Automatic deployment on every push
 
 ### AWS ECS/Fargate
 
