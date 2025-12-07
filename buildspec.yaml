@@ -35,7 +35,7 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - |
         if [ "$DEPLOY_TO_K8S" = "true" ]; then
-          echo Updating kubeconfig to access EKS cluster (re-connecting)...
+          echo "Updating kubeconfig to access EKS cluster (re-connecting)..."
           if [ -z "$AWS_DEFAULT_REGION" ] || [ -z "$EKS_CLUSTER_NAME" ]; then
             echo "ERROR: AWS_DEFAULT_REGION and EKS_CLUSTER_NAME must be set when DEPLOY_TO_K8S=true"
             exit 1
