@@ -148,7 +148,7 @@ CodeBuild needs permissions to push to ECR and deploy to your infrastructure.
    APP_NAME = model-deployment-tutorial
    AWS_DEFAULT_REGION = eu-central-1
    DEPLOY_TO_K8S = false  # Set to true if deploying to Kubernetes
-   EKS_CLUSTER_NAME = your-cluster-name  # Only if DEPLOY_TO_K8S=true
+   EKS_CLUSTER_NAME = model-deployment-cluster  # Only if DEPLOY_TO_K8S=true
    ```
 
 4. **Save changes**
@@ -233,21 +233,30 @@ aws ecs create-cluster --cluster-name model-deployment-cluster --region eu-centr
 
 ### Option B: Deploy to Amazon EKS
 
-1. **Update buildspec.yaml:**
-   - Set `DEPLOY_TO_K8S=true`
-   - Set `EKS_CLUSTER_NAME=your-cluster-name`
+**📘 For detailed EKS deployment instructions, see [EKS_DEPLOYMENT_GUIDE.md](./EKS_DEPLOYMENT_GUIDE.md)**
 
-2. **Update CodeBuild environment variables:**
-   - `DEPLOY_TO_K8S = true`
-   - `EKS_CLUSTER_NAME = your-eks-cluster-name`
+Quick setup:
 
-3. **Add kubectl to CodeBuild:**
-   - The buildspec already includes kubectl setup
+1. **Create EKS cluster** (using the setup script):
+   ```bash
+   ./scripts/setup_eks_cluster.sh --cluster-name model-deployment-cluster
+   ```
+
+2. **Deploy application** (using the deployment script):
+   ```bash
+   ./scripts/deploy_to_eks.sh --cluster-name model-deployment-cluster
+   ```
+
+3. **Or configure CI/CD:**
+   - Update CodeBuild environment variables:
+     - `DEPLOY_TO_K8S = true`
+     - `EKS_CLUSTER_NAME = model-deployment-cluster`
+   - The buildspec.yaml will automatically deploy to EKS
    - Make sure CodeBuild role has EKS permissions
 
 4. **Kubernetes manifests:**
    - Your `k8s/` folder contains all necessary manifests
-   - CodeBuild will apply them automatically
+   - CodeBuild will apply them automatically when `DEPLOY_TO_K8S=true`
 
 ### Option C: Deploy to EC2
 
